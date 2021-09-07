@@ -139,7 +139,7 @@ module.exports = {
             });
 
             await emailService.sendEmail(user.email, forgotPass, {
-                url: `${FORGET_PASS_FRONT_URL}${token}`
+                url: `${FORGET_PASS_FRONT_URL}/auth/reset_password?actionToken=${token}`
             });
 
             res.status(NO_CONTENT).json('Success');
