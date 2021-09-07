@@ -1,13 +1,11 @@
 const CustomError = require('../errors/customError');
 const {
-    CREATED, NOT_AUTHORIZED, NO_CONTENT, BAD_REQUEST
+    CREATED, NOT_AUTHORIZED, NO_CONTENT
 } = require('../constants/status-codes.enum');
-const { hashPassword, comparePasswords } = require('../services/password.service');
-const { generateTokens, generateActionToken } = require('../services/jwt.service');
 const { User, OAuth, ActionToken } = require('../db');
 const { normalizeUser } = require('../utils/user.util');
-const { sendEmail, sendLogoutEmail } = require('../services/email.service');
 const { forgotPass } = require('../constants/letter-types.enum');
+const { passwordService, jwtService, emailService } = require('../services');
 
 module.exports = {
 
@@ -15,7 +13,7 @@ module.exports = {
         try {
             const { email, password, role } = req.body;
 
-            const hashedPassword = await hashPassword(password);
+            const hashedPassword = await passwordService.hashPassword(password);
 
             const user = await User.create({
                 email,
@@ -25,14 +23,14 @@ module.exports = {
 
             const normalizedUser = normalizeUser(user);
 
-            const tokenPair = generateTokens();
+            const tokenPair = jwtService.generateTokens();
 
             await OAuth.create({
                 ...tokenPair,
                 user: user._id
             });
 
-            await sendEmail(email);
+            await emailService.sendEmail(email);
 
             res
                 .status(CREATED)
@@ -46,11 +44,11 @@ module.exports = {
         try {
             const { user, body: { password } } = req;
 
-            await comparePasswords(password, user.password);
+            await passwordService.comparePasswords(password, user.password);
 
             const normalizedUser = normalizeUser(user);
 
-            const tokenPair = generateTokens();
+            const tokenPair = jwtService.generateTokens();
 
             await OAuth.create({
                 ...tokenPair,
@@ -68,7 +66,7 @@ module.exports = {
         try {
             const { token } = req;
 
-            const newTokenPair = generateTokens();
+            const newTokenPair = jwtService.generateTokens();
 
             const DbToken = await OAuth.findOneAndUpdate({ refreshToken: token }, { ...newTokenPair });
 
@@ -101,7 +99,7 @@ module.exports = {
 
             await OAuth.deleteOne({ accessToken: token });
 
-            await sendLogoutEmail(email, { email });
+            await emailService.sendLogoutEmail(email, { email });
 
             res
                 .status(NO_CONTENT)
@@ -118,7 +116,7 @@ module.exports = {
 
             await OAuth.deleteMany({ user: currentUser });
 
-            await sendLogoutEmail(email, { email });
+            await emailService.sendLogoutEmail(email, { email });
 
             res
                 .status(NO_CONTENT)
@@ -132,14 +130,14 @@ module.exports = {
         try {
             const { user } = req;
 
-            const token = generateActionToken();
+            const token = jwtService.generateActionToken();
 
             await ActionToken.create({
                 token,
                 user
             });
 
-            await sendEmail(user.email, forgotPass, {
+            await emailService.sendEmail(user.email, forgotPass, {
                 url: `http://localhost:5000/auth/reset_password?actionToken=${token}`
             });
 
@@ -154,9 +152,9 @@ module.exports = {
             const { oldPassword, newPassword } = req.body;
             const { user, actionToken } = req;
 
-            await comparePasswords(oldPassword, user.password);
+            await passwordService.comparePasswords(oldPassword, user.password);
 
-            const newHashedPassword = await hashPassword(newPassword);
+            const newHashedPassword = await passwordService.hashPassword(newPassword);
 
             await User.findOneAndUpdate({ email: user.email }, {
                 password: newHashedPassword
