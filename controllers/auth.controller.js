@@ -6,6 +6,7 @@ const { User, OAuth, ActionToken } = require('../db');
 const { normalizeUser } = require('../utils/user.util');
 const { forgotPass } = require('../constants/letter-types.enum');
 const { passwordService, jwtService, emailService } = require('../services');
+const { FORGET_PASS_FRONT_URL } = require('../constants/constants');
 
 module.exports = {
 
@@ -138,7 +139,7 @@ module.exports = {
             });
 
             await emailService.sendEmail(user.email, forgotPass, {
-                url: `http://localhost:5000/auth/reset_password?actionToken=${token}`
+                url: `${FORGET_PASS_FRONT_URL}${token}`
             });
 
             res.status(NO_CONTENT).json('Success');
