@@ -1,4 +1,6 @@
-const { registerCongrats, goodBye, forgotPass } = require('../constants/letter-types.enum');
+const {
+    registerCongrats, goodBye, forgotPass, creationNotification
+} = require('../constants/letter-types.enum');
 
 module.exports = {
     [registerCongrats]: {
@@ -17,6 +19,12 @@ module.exports = {
         templateName: 'forgotPass',
         config: {
             subject: 'Confirm password reset'
+        }
+    },
+    [creationNotification]: {
+        templateName: 'creationNotification',
+        config: {
+            subject: 'Your email was used to create admin on website'
         }
     }
 };

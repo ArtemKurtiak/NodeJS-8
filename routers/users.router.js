@@ -2,19 +2,26 @@ const router = require('express').Router();
 
 const { checkAccessToken } = require('../middlewares/auth.middleware');
 const {
-    getAllUsers, getUserById, deleteUser, updateUser, createUser
+    getAllUsers, getUserById, deleteUser, updateUser, createUser, createAdmin
 } = require('../controllers/users.controller');
 const {
     checkUserPermission,
     isFullDataInUserRequest,
-    isUpdateUserDataSent, isUserIdFormatCorrect, checkUserAvailability, isUserNotExists, isUserExists
+    isUpdateUserDataSent, isUserIdFormatCorrect, checkUserAvailability, isUserNotExists, isUserExists, isUserAdmin
 } = require('../middlewares/user.middleware');
 
 router.use(checkAccessToken);
 
-router.post('/', isFullDataInUserRequest, checkUserAvailability('email'), isUserNotExists, createUser);
-
 router.get('/', getAllUsers);
+
+router.use('/', isFullDataInUserRequest, isUserAdmin, checkUserAvailability('email'), isUserNotExists);
+
+router.post('/', createUser);
+
+router.post('/admin',
+    checkUserAvailability('email'),
+    isUserNotExists,
+    createAdmin);
 
 router.use('/:userId', isUserIdFormatCorrect);
 

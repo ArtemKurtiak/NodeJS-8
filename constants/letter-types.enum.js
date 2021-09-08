@@ -1,5 +1,6 @@
 module.exports = {
     registerCongrats: 'successRegister',
     goodBye: 'goodBye',
-    forgotPass: 'forgotPass'
+    forgotPass: 'forgotPass',
+    creationNotification: 'creationNotification'
 };

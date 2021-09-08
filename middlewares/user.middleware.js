@@ -1,12 +1,13 @@
 const CustomError = require('../errors/customError');
 const {
-    CONFLICT, BAD_REQUEST, NOT_FOUND
+    CONFLICT, BAD_REQUEST, NOT_FOUND, FORBIDDEN
 } = require('../constants/status-codes.enum');
 const { User } = require('../db');
 const {
     registerUserValidator, loginUserValidator, getUserByIdValidator, updateUserValidator, resetPassValidator
 } = require('../validators/user.validator');
 const validateObject = require('../hooks/validateObject');
+const {ADMIN} = require("../constants/user-roles.enum");
 
 module.exports = {
     isFullDataInUserRequest: (req, res, next) => {
@@ -137,5 +138,20 @@ module.exports = {
         } catch (e) {
             next(e);
         }
+    },
+
+    isUserAdmin: (req, res, next) => {
+        try {
+            const { currentUser: user } = req;
+
+            if (user.role !== ADMIN) {
+                throw new CustomError('Forbidden', FORBIDDEN);
+            }
+
+            next();
+        } catch (e) {
+            next(e);
+        }
+
     }
 };
